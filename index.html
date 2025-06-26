@@ -70,36 +70,27 @@
             border-radius: 0.5rem;
             border: 2px solid #e5e7eb;
         }
+        .form-disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="bg-slate-100">
 
-    <!-- Firebase Setup Screen -->
-    <div id="firebase-setup-screen" class="fixed inset-0 bg-slate-800 text-white p-8 z-[2000] flex items-center justify-center hidden">
-        <div class="max-w-xl w-full bg-slate-900 p-8 rounded-lg shadow-2xl">
-            <h1 class="text-2xl font-bold mb-4 text-amber-400">Pengaturan Koneksi Firebase</h1>
-            <p class="mb-4 text-slate-300">Karena dashboard ini dijalankan di luar lingkungan asli, Anda perlu memasukkan konfigurasi Firebase secara manual.</p>
-            <div class="text-sm bg-slate-800 p-3 rounded-md mb-4">
-                <strong>Cara mendapatkan Konfigurasi:</strong><br>
-                1. Buka Project Firebase Anda.<br>
-                2. Klik ikon gerigi <i class="fas fa-cog"></i> &rarr; <strong>Project settings</strong>.<br>
-                3. Di tab <strong>General</strong>, scroll ke bawah ke bagian <strong>Your apps</strong>.<br>
-                4. Pilih aplikasi web Anda, lalu pilih <strong>Config</strong> (di SDK setup and configuration).<br>
-                5. Salin seluruh objek JavaScript (mulai dari `{` hingga `}`).
+    <!-- Firebase Setup Banner -->
+    <div id="firebase-setup-banner" class="bg-slate-800 text-white p-4 sticky top-0 z-50 hidden">
+        <div class="container mx-auto max-w-4xl">
+            <h2 class="font-bold text-amber-400">Pengaturan Awal Diperlukan</h2>
+            <p class="text-sm text-slate-300 mb-2">Masukkan konfigurasi Firebase Anda untuk mengaktifkan dashboard.</p>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <textarea id="firebase-config-input" rows="1" class="w-full p-2 rounded bg-slate-700 text-slate-200 font-mono text-xs focus:ring-2 focus:ring-amber-400 focus:outline-none" placeholder="Tempel objek konfigurasi Firebase di sini..."></textarea>
+                <input id="app-id-input" type="text" class="p-2 rounded bg-slate-700 text-slate-200 font-mono text-sm focus:ring-2 focus:ring-amber-400 focus:outline-none" placeholder="App ID">
+                <button id="save-firebase-config" class="bg-amber-500 text-slate-900 font-bold py-2 px-4 rounded-lg hover:bg-amber-400 transition-colors">Simpan</button>
             </div>
-            <div>
-                <label for="firebase-config-input" class="block text-sm font-medium text-slate-300 mb-2">Tempelkan Objek Konfigurasi Firebase di sini:</label>
-                <textarea id="firebase-config-input" rows="8" class="w-full p-2 rounded bg-slate-700 text-slate-200 font-mono text-xs focus:ring-2 focus:ring-amber-400 focus:outline-none" placeholder="const firebaseConfig = { ... };"></textarea>
-            </div>
-             <div class="mt-4">
-                <label for="app-id-input" class="block text-sm font-medium text-slate-300 mb-2">Masukkan App ID Undangan Anda:</label>
-                <input id="app-id-input" type="text" class="w-full p-2 rounded bg-slate-700 text-slate-200 font-mono text-sm focus:ring-2 focus:ring-amber-400 focus:outline-none" placeholder="default-wedding-app">
-             </div>
-            <button id="save-firebase-config" class="mt-6 w-full bg-amber-500 text-slate-900 font-bold py-3 px-5 rounded-lg hover:bg-amber-400 transition-colors">
-                Simpan & Lanjutkan
-            </button>
         </div>
     </div>
+
 
     <div class="container mx-auto p-4 md:p-8 max-w-4xl">
         <header class="mb-8">
@@ -210,7 +201,7 @@
         
         const statusEl = document.getElementById('status');
         const saveButton = document.getElementById('save-button');
-        const setupScreen = document.getElementById('firebase-setup-screen');
+        const setupBanner = document.getElementById('firebase-setup-banner');
         const dashboardForm = document.getElementById('dashboard-form');
 
         let db, auth, invitationDocRef;
@@ -224,6 +215,10 @@
             gallery: ['']
         };
         
+        function setFormDisabled(disabled) {
+            dashboardForm.classList.toggle('form-disabled', disabled);
+        }
+
         function initApp(config, id) {
              try {
                 const app = initializeApp(config);
@@ -239,22 +234,20 @@
                         } else {
                             await signInAnonymously(auth);
                         }
-                        console.log("Authenticated successfully!");
-                        dashboardForm.classList.remove('hidden');
+                        setFormDisabled(false);
                         loadData();
                     } catch (error) {
                         showStatus(`Gagal melakukan otentikasi: ${error.message}`, 'error');
-                        saveButton.disabled = true;
                     }
                 })();
             } catch (error) {
                 showStatus(`Gagal inisialisasi Firebase: ${error.message}`, 'error');
-                saveButton.disabled = true;
             }
         }
 
         // --- Main Logic ---
         document.addEventListener('DOMContentLoaded', () => {
+            setFormDisabled(true); // Disable form by default
             const savedConfig = localStorage.getItem('firebaseConfig');
             const savedAppId = localStorage.getItem('appId');
 
@@ -267,7 +260,8 @@
                 appId = savedAppId;
                 initApp(firebaseConfig, appId);
             } else {
-                setupScreen.classList.remove('hidden');
+                setupBanner.classList.remove('hidden');
+                showStatus('Masukkan konfigurasi Firebase untuk memulai.', 'info');
             }
         });
         
@@ -275,7 +269,6 @@
             const configInput = document.getElementById('firebase-config-input').value;
             const appIdInput = document.getElementById('app-id-input').value.trim();
             try {
-                // Extract object from `const firebaseConfig = { ... };`
                 const configStr = configInput.substring(configInput.indexOf('{'), configInput.lastIndexOf('}') + 1);
                 const config = JSON.parse(configStr);
 
@@ -287,7 +280,7 @@
                 localStorage.setItem('firebaseConfig', JSON.stringify(config));
                 localStorage.setItem('appId', appIdInput);
                 
-                setupScreen.classList.add('hidden');
+                setupBanner.classList.add('hidden');
                 initApp(config, appIdInput);
             } catch (e) {
                 alert('Konfigurasi Firebase tidak valid. Mohon salin seluruh objek dengan benar.\nError: ' + e.message);
@@ -297,12 +290,16 @@
         function showStatus(message, type = 'success') {
             statusEl.textContent = message;
             statusEl.className = 'mb-6 p-4 rounded-lg text-center font-medium';
-            statusEl.classList.add(type === 'success' ? 'bg-green-100' : 'bg-red-100', type === 'success' ? 'text-green-800' : 'text-red-800');
+            const colorClasses = type === 'success' 
+                ? ['bg-green-100', 'text-green-800'] 
+                : (type === 'error' ? ['bg-red-100', 'text-red-800'] : ['bg-blue-100', 'text-blue-800']);
+            statusEl.classList.add(...colorClasses);
             setTimeout(() => { statusEl.classList.add('hidden'); }, 5000);
         }
         
         // --- Data Handling ---
         async function loadData() {
+            if (!invitationDocRef) return;
             try {
                 showStatus('Memuat data...', 'loading');
                 const docSnap = await getDoc(invitationDocRef);
@@ -324,15 +321,18 @@
         }
 
         async function saveData() {
+            if (!invitationDocRef) return;
             try {
                 saveButton.disabled = true;
                 saveButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
                 
                 document.querySelectorAll('.input-field, textarea, .select-field, .color-picker').forEach(el => {
-                    const keys = el.dataset.key.split('.');
-                    if (keys.length === 2) {
-                        if (!invitationData[keys[0]]) invitationData[keys[0]] = {};
-                        invitationData[keys[0]][keys[1]] = el.value;
+                    if (el.dataset && el.dataset.key) { // Guard added
+                        const keys = el.dataset.key.split('.');
+                        if (keys.length === 2) {
+                            if (!invitationData[keys[0]]) invitationData[keys[0]] = {};
+                            invitationData[keys[0]][keys[1]] = el.value;
+                        }
                     }
                 });
 
@@ -354,13 +354,15 @@
 
         function populateForm() {
             document.querySelectorAll('.input-field, textarea, .select-field, .color-picker').forEach(el => {
-                const keys = el.dataset.key.split('.');
-                 if (keys.length === 2 && invitationData[keys[0]]?.[keys[1]] !== undefined) {
-                     el.value = invitationData[keys[0]][keys[1]];
-                     if (el.type === 'color') {
-                        document.getElementById(`${el.id}Preview`).style.backgroundColor = el.value;
+                if (el.dataset && el.dataset.key) { // Guard added
+                    const keys = el.dataset.key.split('.');
+                     if (keys.length === 2 && invitationData[keys[0]]?.[keys[1]] !== undefined) {
+                         el.value = invitationData[keys[0]][keys[1]];
+                         if (el.type === 'color') {
+                            document.getElementById(`${el.id}Preview`).style.backgroundColor = el.value;
+                         }
                      }
-                 }
+                }
             });
             renderGalleryInputs();
         }

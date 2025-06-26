@@ -136,6 +136,15 @@
                     <div class="space-y-4">
                         <h3 class="font-medium text-slate-600">Umum</h3>
                         <div><label for="backgroundUrl" class="block text-sm font-medium text-slate-600 mb-1">URL Latar Belakang Utama</label><input type="text" id="backgroundUrl" data-key="display.backgroundUrl" class="input-field"></div>
+                        <div>
+                            <label for="musicUrl" class="block text-sm font-medium text-slate-600 mb-1">Pilih Lagu Latar</label>
+                            <select id="musicUrl" data-key="display.musicUrl" class="select-field">
+                                <option value="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3">A Little Romance</option>
+                                <option value="https://cdn.pixabay.com/audio/2022/11/17/audio_8722b14343.mp3">Touching Moments</option>
+                                <option value="https://cdn.pixabay.com/audio/2023/10/23/audio_854dd22623.mp3">The Beauty of Love</option>
+                                <option value="https://cdn.pixabay.com/audio/2022/05/27/audio_141a998c7e.mp3">Forever and a Day</option>
+                            </select>
+                        </div>
                         <div><label for="animation" class="block text-sm font-medium text-slate-600 mb-1">Animasi Halaman</label><select id="animation" data-key="display.animationEnabled" class="select-field"><option value="true">Aktif</option><option value="false">Nonaktif</option></select></div>
                     </div>
                     <div class="space-y-4">
@@ -220,7 +229,7 @@
             bride: { name: '', parents: '', photoUrl: '' },
             akad: { date: '', time: '', location: '' },
             resepsi: { date: '', time: '', location: '' },
-            display: { backgroundUrl: '', accentColor: '#d4af37', backgroundColor: '#f8f4e9', textColor: '#3d3d3d', headingFont: 'Playfair Display', bodyFont: 'Poppins', animationEnabled: 'true' },
+            display: { backgroundUrl: '', musicUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', accentColor: '#d4af37', backgroundColor: '#f8f4e9', textColor: '#3d3d3d', headingFont: 'Playfair Display', bodyFont: 'Poppins', animationEnabled: 'true' },
             gallery: ['']
         };
 
